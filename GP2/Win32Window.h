@@ -1,3 +1,6 @@
+//an #include guard, sometimes called a macro guard, 
+//is a particular construct used to avoid the problem of double inclusion when dealing with the include directive. 
+//The addition of #include guards to a header file is one way to make that file idempotent.
 #pragma once
 
 #include <string>
