@@ -43,8 +43,6 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="ScreenSpace.fx">
-      <Filter>Effects</Filter>
-    </None>
+    <None Include="ScreenSpace.fx" />
   </ItemGroup>
 </Project>
