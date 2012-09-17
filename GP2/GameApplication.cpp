@@ -69,6 +69,7 @@ void CGameApplication::render(){
 	float ClearColor[4] = {0.0f, 0.125f, 0.3f, 1.0f};
 	m_pD3D10Device->ClearRenderTargetView(m_pRenderTargetView, ClearColor);
 
+	//TODO
 	D3D10_TECHNIQUE_DESC techDesc;
 	m_pTechnique->GetDesc(&techDesc);
 	for(UINT p = 0; p < techDesc.Passes; ++p){
@@ -303,7 +304,7 @@ bool CGameApplication::initGame(){
 		m_pD3D10Device, NULL, NULL, &m_pEffect,
 		NULL, NULL)))
 	{
-		MessageBox(NULL, TEXT("The FX file cannot be located. Please run this executable from the directory that contains the FX fulesn"),
+		MessageBox(NULL, TEXT("The FX file cannot be located. Please run this executable from the directory that contains the FX"),
 			TEXT("Error"),
 			MB_OK);
 		return false;
@@ -340,7 +341,7 @@ bool CGameApplication::initGame(){
 	};
 	//--------------------
 
-	//--------
+	//TODO
 	UINT numElements = sizeof(layout)/sizeof(D3D10_INPUT_ELEMENT_DESC);
 	D3D10_PASS_DESC PassDesc;
 	m_pTechnique->GetPassByIndex(0)->GetDesc(&PassDesc);
@@ -355,7 +356,7 @@ bool CGameApplication::initGame(){
 	}
 	//--------------------
 
-	//-------
+	//TODO
 	m_pD3D10Device->IASetInputLayout(m_pVertexLayout);
 	UINT stride = sizeof(Vertex);
 	UINT offset = 0;
