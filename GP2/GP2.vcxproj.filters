@@ -44,7 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="ScreenSpace.fx">
-      <Filter>Game</Filter>
+      <Filter>Effects</Filter>
     </None>
   </ItemGroup>
 </Project>

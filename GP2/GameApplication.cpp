@@ -336,7 +336,7 @@ bool CGameApplication::initGame(){
 
 	//5th Parameter(UiNT) - The starting offset of the element, this will increase for subsequent elements in the array.
 	D3D10_INPUT_ELEMENT_DESC layout[] = {
-		{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0,
+		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
 		D3D10_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	//--------------------
