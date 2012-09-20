@@ -75,6 +75,9 @@ void CGameApplication::render(){
 	m_pD3D10Device->ClearDepthStencilView(m_pDepthStencilView,
 		D3D10_CLEAR_DEPTH, 1.0f, 0);
 
+	m_pViewMatrixVariable->SetMatrix((float*)m_matView);
+	m_pWorldMatrixVariable->SetMatrix((float*)m_matWorld);
+
 	//TODO
 	D3D10_TECHNIQUE_DESC techDesc;
 	m_pTechnique->GetDesc(&techDesc);
@@ -88,6 +91,12 @@ void CGameApplication::render(){
 }
 
 void CGameApplication::update(){
+	D3DXMatrixScaling(&m_matScale, m_vecScale.x, m_vecScale.y,m_vecScale.z);
+	D3DXMatrixRotationYawPitchRoll(&m_matRotation, m_vecRotation.y, m_vecRotation.x, m_vecRotation.z);
+	D3DXMatrixTranslation(&m_matTranslation, m_vecPosition.x, m_vecPosition.y, m_vecPosition.z);
+
+	D3DXMatrixMultiply(&m_matWorld, &m_matScale, &m_matRotation);
+	D3DXMatrixMultiply(&m_matWorld, &m_matWorld, &m_matTranslation);
 
 }
 
@@ -237,6 +246,7 @@ bool CGameApplication::initGraphics(){
 	descDepth.SampleDesc.Quality = 0;
 	descDepth.Usage = D3D10_USAGE_DEFAULT;
 	descDepth.BindFlags = D3D10_BIND_DEPTH_STENCIL;
+	descDepth.CPUAccessFlags = 0;
 	descDepth.MiscFlags = 0;
 	//--------------
 
@@ -330,6 +340,8 @@ bool CGameApplication::initGame(){
 #endif
 	//--------------------
 
+	
+
 	//1st Parameter(LPCSTR) - The filename of the effect file in this case ScreenSpace.fx
 
 	//4th Parameter(LPCSTR) - The shader profile we are using in this case fx_4_0 which is equivalent of shader model 4
@@ -352,9 +364,9 @@ bool CGameApplication::initGame(){
 		return false;
 	}
 	//--------------------
-
+	
 	//Output
-	OutputDebugString(TEXT("Error"));
+	OutputDebugString(TEXT("Hello"));
 
 	//passes in a string which is the technique we are looking for in the effect. IMPORTANT TO NAME TECHNIQUES!!
 	m_pTechnique = m_pEffect->GetTechniqueByName("Render");
@@ -417,6 +429,34 @@ bool CGameApplication::initGame(){
 	D3DXVECTOR3 cameraUp(0.0f, 1.0f, 0.0f);
 	D3DXMatrixLookAtLH(&m_matView, &cameraPos, &cameraLook, &cameraUp);
 	//-----------------
+
+	D3D10_VIEWPORT vp;
+	UINT numViewPorts = 1;
+	m_pD3D10Device->RSGetViewports(&numViewPorts, &vp);
+
+	//TODO
+	D3DXMatrixPerspectiveFovLH(&m_matProjection, (float)D3DX_PI * 0.25f, vp.Width / (FLOAT) vp.Height, 0.1f, 100.0f);
+	//---------------
+
+	//TODO
+	m_pViewMatrixVariable = m_pEffect->GetVariableByName("matView")->AsMatrix();
+	m_pProjectionMatrixVariable = m_pEffect->GetVariableByName("matProjection")->AsMatrix();
+	//---------------
+
+	//TODO
+	m_pProjectionMatrixVariable->SetMatrix((float*)m_matView);
+	D3D10_TECHNIQUE_DESC techDesc;
+	m_pTechnique->GetDesc(&techDesc);
+	//------------------
+
+	//TODO
+	m_vecPosition = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_vecScale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
+	m_vecRotation = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_pWorldMatrixVariable = m_pEffect->GetVariableByName("matWorld")->AsMatrix();
+	//------------------
+
+
 
 	return true;
 }
