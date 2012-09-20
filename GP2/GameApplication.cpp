@@ -28,6 +28,10 @@ CGameApplication::~CGameApplication(void){
 
 	if(m_pRenderTargetView)
 		m_pRenderTargetView->Release();
+	if(m_pDepthStencilView)
+		m_pDepthStencilView->Release();
+	if(m_pDepthStencilTexture)
+		m_pDepthStencilTexture->Release();
 	if(m_pSwapChain)
 		m_pSwapChain->Release();
 	if(m_pD3D10Device)
@@ -68,6 +72,8 @@ void CGameApplication::render(){
 	//Last line will flip the swap chain, so the back buffer will be copied to the front buffer and our rendered scene should appear.
 	float ClearColor[4] = {0.0f, 0.125f, 0.3f, 1.0f};
 	m_pD3D10Device->ClearRenderTargetView(m_pRenderTargetView, ClearColor);
+	m_pD3D10Device->ClearDepthStencilView(m_pDepthStencilView,
+		D3D10_CLEAR_DEPTH, 1.0f, 0);
 
 	//TODO
 	D3D10_TECHNIQUE_DESC techDesc;
@@ -215,6 +221,42 @@ bool CGameApplication::initGraphics(){
 	PBackBuffer->Release();
 	//--------------
 
+	
+	//Format(DXGI_FORMAT) - This is format of the texture, in this case its DXDI_FORMAT_D32_FLOAT.
+	//This specifies that this texture will hold 32 bit flaoting point(32_FLOAT) depth values(D).
+
+	//BindFlags(UINT) - This specifies how this texture will be bound to the pipeline, you need to ensure that this value is
+	//D3D10_BIND_DEPTH_STENCIL.
+	D3D10_TEXTURE2D_DESC descDepth;
+	descDepth.Width = width;
+	descDepth.Height = height;
+	descDepth.MipLevels = 1;
+	descDepth.ArraySize = 1;
+	descDepth.Format = DXGI_FORMAT_D32_FLOAT;
+	descDepth.SampleDesc.Count = 1;
+	descDepth.SampleDesc.Quality = 0;
+	descDepth.Usage = D3D10_USAGE_DEFAULT;
+	descDepth.BindFlags = D3D10_BIND_DEPTH_STENCIL;
+	descDepth.MiscFlags = 0;
+	//--------------
+
+	//We are creating a depth stencil view, we have to do this because a texture can't be bound directly to the pipeline as depth buffer.
+	//We have to create this depth stencil view, which can then be bound to the pipeline.
+	if(FAILED(m_pD3D10Device->CreateTexture2D(&descDepth, NULL, &m_pDepthStencilTexture)))
+		return false;
+	//--------------
+
+	//This creates a valid Depth stencil view, This needs o be bound to the OutputMerger stage of the pipeline.
+	D3D10_DEPTH_STENCIL_VIEW_DESC descDSV;
+	descDSV.Format = descDepth.Format;
+	descDSV.ViewDimension = D3D10_DSV_DIMENSION_TEXTURE2D;
+	descDSV.Texture2D.MipSlice = 0;
+
+	if(FAILED(m_pD3D10Device->CreateDepthStencilView(
+		m_pDepthStencilTexture, &descDSV, &m_pDepthStencilView)))
+		return false;
+	//--------------
+
 	//1st Parameter(UINT) - This values specifies the amount of render targets we are going to bind to the pipeline.
 
 	//2nd Parameter(ID3D10RenderTargetView*) - A pointer to an array of render targets.
@@ -222,7 +264,7 @@ bool CGameApplication::initGraphics(){
 	//3rd Parameter(ID3D10DepthStencilView*) - A pointer to a depth stencil view, this holds deepth information for our scene.
 
 	//The function binds an array of render targets to the output merger stage of pipeline(refer to lecture notes).
-	m_pD3D10Device->OMSetRenderTargets(1, &m_pRenderTargetView, NULL);
+	m_pD3D10Device->OMSetRenderTargets(1, &m_pRenderTargetView, m_pDepthStencilView);
 	//--------------
 
 	//This first setups up a D3D10_VIEWPORT instance, this is the same width and height of the window.
@@ -299,7 +341,7 @@ bool CGameApplication::initGame(){
 	//10th Parameter(ID3D10Effect**) - A pointer to a memory address of  an effect object.
 
 	//At this function has completed we should have a valid pointer to an effect object, if it fails then we will display a message box nd return false.
-	if(FAILED(D3DX10CreateEffectFromFile(TEXT("ScreenSpace.fx"),
+	if(FAILED(D3DX10CreateEffectFromFile(TEXT("Transform.fx"),
 		NULL, NULL, "fx_4_0", dwShaderFlags, 0,
 		m_pD3D10Device, NULL, NULL, &m_pEffect,
 		NULL, NULL)))
@@ -310,6 +352,9 @@ bool CGameApplication::initGame(){
 		return false;
 	}
 	//--------------------
+
+	//Output
+	OutputDebugString(TEXT("Error"));
 
 	//passes in a string which is the technique we are looking for in the effect. IMPORTANT TO NAME TECHNIQUES!!
 	m_pTechnique = m_pEffect->GetTechniqueByName("Render");
@@ -365,6 +410,13 @@ bool CGameApplication::initGame(){
 	//--------------------
 
 	m_pD3D10Device->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//TODO
+	D3DXVECTOR3 cameraPos(0.0f, 0.0f, -10.0f);
+	D3DXVECTOR3 cameraLook(0.0f, 0.0f, 1.0f);
+	D3DXVECTOR3 cameraUp(0.0f, 1.0f, 0.0f);
+	D3DXMatrixLookAtLH(&m_matView, &cameraPos, &cameraLook, &cameraUp);
+	//-----------------
 
 	return true;
 }
