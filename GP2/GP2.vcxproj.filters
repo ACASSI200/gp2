@@ -46,7 +46,7 @@
     <None Include="ScreenSpace.fx">
       <Filter>Effects</Filter>
     </None>
-    <None Include="..\..\..\..\..\..\Apps\NVIDIA Corporation\FX Composer 2.5\MEDIA\Transform.fx">
+    <None Include="Transform.fx">
       <Filter>Effects</Filter>
     </None>
   </ItemGroup>

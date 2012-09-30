@@ -26,6 +26,9 @@ CGameApplication::~CGameApplication(void){
 	if(m_pEffect)
 		m_pEffect->Release();
 
+	if(m_pIndexBuffer)
+		m_pIndexBuffer->Release();
+
 	if(m_pRenderTargetView)
 		m_pRenderTargetView->Release();
 	if(m_pDepthStencilView)
@@ -83,7 +86,8 @@ void CGameApplication::render(){
 	m_pTechnique->GetDesc(&techDesc);
 	for(UINT p = 0; p < techDesc.Passes; ++p){
 		m_pTechnique->GetPassByIndex(p)->Apply(0);
-		m_pD3D10Device->Draw(3, 0);
+		m_pD3D10Device->DrawIndexed(36,0,0);
+		//m_pD3D10Device->Draw(8, 0);
 	}
 
 	m_pSwapChain->Present(0,0);
@@ -312,7 +316,7 @@ bool CGameApplication::initGame(){
 	//The variables of the buffer are describe below.
 	D3D10_BUFFER_DESC bd;
 	bd.Usage = D3D10_USAGE_DEFAULT;
-	bd.ByteWidth = sizeof( Vertex ) * 3;
+	bd.ByteWidth = sizeof( Vertex ) * 8;
 	bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
 	bd.CPUAccessFlags = 0;
 	bd.MiscFlags = 0;
@@ -322,9 +326,19 @@ bool CGameApplication::initGame(){
 	//pSysMem variable of this structure to be equal to our vertices.
 	Vertex vertices[] =
 	{
-		D3DXVECTOR3(0.0f, 0.5f, 0.5f),
-		D3DXVECTOR3(0.5f, -0.5f, 0.5f),
+
+		//Part one of Square;
+		D3DXVECTOR3(-0.5f, 0.5f, -0.5f),
+		D3DXVECTOR3(0.5f, 0.5f, -0.5f),
+		D3DXVECTOR3(-0.5f, -0.5f, -0.5f),
+		D3DXVECTOR3(0.5f, -0.5f, -0.5f),
+		
+		//Part two of square;
+		D3DXVECTOR3(-0.5f, 0.5f, 0.5f),
+		D3DXVECTOR3(0.5f, 0.5f, 0.5f),
 		D3DXVECTOR3(-0.5f, -0.5f, 0.5f),
+		D3DXVECTOR3(0.5f, -0.5f, 0.5f),
+		
 	};
 
 	D3D10_SUBRESOURCE_DATA InitData;
@@ -366,7 +380,7 @@ bool CGameApplication::initGame(){
 	//--------------------
 	
 	//Output
-	OutputDebugString(TEXT("Hello"));
+	OutputDebugString(TEXT("Hello World"));
 
 	//passes in a string which is the technique we are looking for in the effect. IMPORTANT TO NAME TECHNIQUES!!
 	m_pTechnique = m_pEffect->GetTechniqueByName("Render");
@@ -382,6 +396,55 @@ bool CGameApplication::initGame(){
 	if(FAILED(m_pD3D10Device->CreateBuffer(&bd, &InitData, &m_pVertexBuffer)))
 		return false;
 	//--------------------
+
+	//Usage(D3D10_USAGE) - This describes how the buffer is read.written to. 
+	//DEFAULT states that the resource will be written and read by the CPU.
+
+	//ByteWidth(UINT) - The size of the buffer, in this case it will hold 3 vertices.
+
+	//BindFlags(UINT) - The type of buffer we are creating, this is a combination of D3D10_BIND_FLAGS.
+	//In this case we are using VERTEX_BUFFER which specfies that we are creating a vertex buffer.
+
+	//CPUAccessFlag(UINT) - A combination of D3D10_CPU_ACCESS_FLAG, this is used to specify that buffer can be read/written by the CPU.
+	//Zero means that the CPU can't access the buffer once its created.
+
+	//MiscFlags(UINT) - A combination of D3D10_RESOURCE_MISC_FLAGS, this is used for an additional options.
+	//Zero means no additional options.
+
+	//This is the buffer description structure and is used to specify options for when we create a buffer.
+	//The variables of the buffer are describe below.
+	D3D10_BUFFER_DESC indexBufferDesc;
+	indexBufferDesc.Usage = D3D10_USAGE_DEFAULT;
+	indexBufferDesc.ByteWidth = sizeof( int ) * 36;
+	indexBufferDesc.BindFlags = D3D10_BIND_INDEX_BUFFER;
+	indexBufferDesc.CPUAccessFlags = 0;
+	indexBufferDesc.MiscFlags = 0;
+
+	int indices[] ={
+		//Front
+		0, 1, 2, 3, /*----*/ 1, 3, 2, 0,
+		//Right
+		2, 3, 5, 6,  /*----*/ 3, 6, 5, 2,
+		//Top
+		1, 7, 3, 6, /*----*/ 7, 6, 3, 1,
+		//Back
+		4, 7, 5, 6, /*----*/ 7, 6, 5, 4,
+		//Left
+		4, 7, 0, 1, /*----*/ 7, 1, 0, 4,
+		//Bottom
+		0, 4, 2, 5, /*----*/ 4, 5, 2, 0
+	};
+	
+	//http://msdn.microsoft.com/en-us/library/windows/desktop/bb172456%28v=vs.85%29.aspx
+	D3D10_SUBRESOURCE_DATA IndexBufferInitialData;
+	IndexBufferInitialData.pSysMem = indices;
+
+	if(FAILED(m_pD3D10Device->CreateBuffer(&indexBufferDesc, &IndexBufferInitialData, &m_pIndexBuffer)))
+		return false;
+	//http://msdn.microsoft.com/en-us/library/windows/desktop/ff476453%28v=vs.85%29.aspx	
+	m_pD3D10Device->IASetIndexBuffer(m_pIndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+	//--------------------
+
 
 	//1st Parameter(LPCSTR) a String which specifies the semantic that this element is bound too.
 	//This allows us to link up vertices from the buffer to the vertices passed into the vertex shader.
@@ -444,7 +507,7 @@ bool CGameApplication::initGame(){
 	//---------------
 
 	//TODO
-	m_pProjectionMatrixVariable->SetMatrix((float*)m_matView);
+	m_pProjectionMatrixVariable->SetMatrix((float*)m_matProjection);
 	D3D10_TECHNIQUE_DESC techDesc;
 	m_pTechnique->GetDesc(&techDesc);
 	//------------------
