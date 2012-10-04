@@ -2,6 +2,7 @@
 
 struct Vertex{
 	D3DXVECTOR3 Pos;
+	D3DXCOLOR colour;
 };
 
 CGameApplication::CGameApplication(void){
@@ -95,12 +96,16 @@ void CGameApplication::render(){
 }
 
 void CGameApplication::update(){
+	m_vecRotation.x += 0.001f;
+	m_vecRotation.y += 0.001f;
+
 	D3DXMatrixScaling(&m_matScale, m_vecScale.x, m_vecScale.y,m_vecScale.z);
 	D3DXMatrixRotationYawPitchRoll(&m_matRotation, m_vecRotation.y, m_vecRotation.x, m_vecRotation.z);
 	D3DXMatrixTranslation(&m_matTranslation, m_vecPosition.x, m_vecPosition.y, m_vecPosition.z);
 
 	D3DXMatrixMultiply(&m_matWorld, &m_matScale, &m_matRotation);
 	D3DXMatrixMultiply(&m_matWorld, &m_matWorld, &m_matTranslation);
+
 
 }
 
@@ -328,16 +333,16 @@ bool CGameApplication::initGame(){
 	{
 
 		//Part one of Square;
-		D3DXVECTOR3(-0.5f, 0.5f, -0.5f),
-		D3DXVECTOR3(0.5f, 0.5f, -0.5f),
-		D3DXVECTOR3(-0.5f, -0.5f, -0.5f),
-		D3DXVECTOR3(0.5f, -0.5f, -0.5f),
+		{D3DXVECTOR3(-0.5f, 0.5f, -0.5f), D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f) },
+		{D3DXVECTOR3(0.5f, -0.5f, -0.5f), D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f) } ,
+		{D3DXVECTOR3(-0.5f, -0.5f, -0.5f), D3DXCOLOR(0.0f,1.0f, 0.0f, 1.0f) },
+		{D3DXVECTOR3(0.5f, 0.5f, -0.5f), D3DXCOLOR(0.0f, 1.0f, 10.0f, 1.0f) },
 		
 		//Part two of square;
-		D3DXVECTOR3(-0.5f, 0.5f, 0.5f),
-		D3DXVECTOR3(0.5f, 0.5f, 0.5f),
-		D3DXVECTOR3(-0.5f, -0.5f, 0.5f),
-		D3DXVECTOR3(0.5f, -0.5f, 0.5f),
+		{D3DXVECTOR3(-0.5f, 0.5f, 0.5f), D3DXCOLOR(0.5f, 1.0f, 0.0f, 1.0f) },
+		{D3DXVECTOR3(0.5f, -0.5f, 0.5f), D3DXCOLOR(0.0f, 1.0f, 0.5f, 1.0f) },
+		{D3DXVECTOR3(-0.5f, -0.5f, 0.5f), D3DXCOLOR(1.0f, 1.0f, 0.0f, 1.0f) },
+		{D3DXVECTOR3(0.5f, 0.5f, 0.5f), D3DXCOLOR(0.5f, 1.0f, 0.5f, 1.0f) },
 		
 	};
 
@@ -354,7 +359,6 @@ bool CGameApplication::initGame(){
 #endif
 	//--------------------
 
-	
 
 	//1st Parameter(LPCSTR) - The filename of the effect file in this case ScreenSpace.fx
 
@@ -422,17 +426,17 @@ bool CGameApplication::initGame(){
 
 	int indices[] ={
 		//Front
-		0, 1, 2, 3, /*----*/ 1, 3, 2, 0,
-		//Right
-		2, 3, 5, 6,  /*----*/ 3, 6, 5, 2,
-		//Top
-		1, 7, 3, 6, /*----*/ 7, 6, 3, 1,
+		0, 1, 2, /*----*/ 0, 3, 1,
 		//Back
-		4, 7, 5, 6, /*----*/ 7, 6, 5, 4,
+		4, 5, 6, /*----*/ 4, 7, 5,
 		//Left
-		4, 7, 0, 1, /*----*/ 7, 1, 0, 4,
+		0, 6, 4,  /*----*/ 4, 7, 5,
+		//Right
+		3, 5, 7,  /*----*/ 3, 1, 5,
+		//Top
+		0, 4, 3,  /*----*/ 0, 3, 7, 
 		//Bottom
-		0, 4, 2, 5, /*----*/ 4, 5, 2, 0
+		2, 6, 1, /*----*/ 6, 5, 1,
 	};
 	
 	//http://msdn.microsoft.com/en-us/library/windows/desktop/bb172456%28v=vs.85%29.aspx
@@ -457,6 +461,9 @@ bool CGameApplication::initGame(){
 	//5th Parameter(UiNT) - The starting offset of the element, this will increase for subsequent elements in the array.
 	D3D10_INPUT_ELEMENT_DESC layout[] = {
 		{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
+		D3D10_INPUT_PER_VERTEX_DATA, 0 },
+
+		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12,
 		D3D10_INPUT_PER_VERTEX_DATA, 0 },
 	};
 	//--------------------
@@ -515,7 +522,7 @@ bool CGameApplication::initGame(){
 	//TODO
 	m_vecPosition = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
 	m_vecScale = D3DXVECTOR3(1.0f, 1.0f, 1.0f);
-	m_vecRotation = D3DXVECTOR3(0.0f, 0.0f, 0.0f);
+	m_vecRotation = D3DXVECTOR3(0.0f, 45.0f, 0.0f);
 	m_pWorldMatrixVariable = m_pEffect->GetVariableByName("matWorld")->AsMatrix();
 	//------------------
 
