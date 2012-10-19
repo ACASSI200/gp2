@@ -3,6 +3,7 @@
 struct Vertex{
 	D3DXVECTOR3 Pos;
 	D3DXCOLOR colour;
+	D3DXVECTOR2 texCoords;
 };
 
 CGameApplication::CGameApplication(void){
@@ -11,6 +12,7 @@ CGameApplication::CGameApplication(void){
 	m_pRenderTargetView=NULL;
 	m_pSwapChain=NULL;
 	m_pVertexBuffer=NULL;
+	m_pDiffuseTexture = NULL;
 }
 
 CGameApplication::~CGameApplication(void){
@@ -23,6 +25,9 @@ CGameApplication::~CGameApplication(void){
 
 	if(m_pVertexLayout)
 		m_pVertexLayout->Release();
+
+	if(m_pDiffuseTexture)
+		m_pDiffuseTexture->Release();
 
 	if(m_pEffect)
 		m_pEffect->Release();
@@ -84,6 +89,7 @@ void CGameApplication::render(){
 
 	//TODO
 	D3D10_TECHNIQUE_DESC techDesc;
+	m_pDiffuseTextureVariable->SetResource(m_pDiffuseTexture);
 	m_pTechnique->GetDesc(&techDesc);
 	for(UINT p = 0; p < techDesc.Passes; ++p){
 		m_pTechnique->GetPassByIndex(p)->Apply(0);
@@ -333,10 +339,10 @@ bool CGameApplication::initGame(){
 	{
 
 		//Part one of Square;
-		{D3DXVECTOR3(-0.5f, 0.5f, -0.5f), D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f) },
-		{D3DXVECTOR3(0.5f, -0.5f, -0.5f), D3DXCOLOR(0.0f, 0.0f, 1.0f, 1.0f) } ,
-		{D3DXVECTOR3(-0.5f, -0.5f, -0.5f), D3DXCOLOR(0.0f,1.0f, 0.0f, 1.0f) },
-		{D3DXVECTOR3(0.5f, 0.5f, -0.5f), D3DXCOLOR(0.0f, 1.0f, 10.0f, 1.0f) },
+		{D3DXVECTOR3(-0.5f, 0.5f, -0.5f), D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f), D3DXVECTOR2(0.0f, 0.0f) },
+		{D3DXVECTOR3(0.5f, -0.5f, -0.5f), D3DXCOLOR(1.0f, 0.0f, 0.0f, 1.0f), D3DXVECTOR2(1.0f, 1.0f)  } ,
+		{D3DXVECTOR3(-0.5f, -0.5f, -0.5f), D3DXCOLOR(0.0f,1.0f, 0.0f, 1.0f), D3DXVECTOR2(0.0f, 1.0f) },
+		{D3DXVECTOR3(0.5f, 0.5f, -0.5f), D3DXCOLOR(0.0f, 1.0f, 10.0f, 1.0f), D3DXVECTOR2(1.0f, 0.0f) },
 		
 		//Part two of square;
 		{D3DXVECTOR3(-0.5f, 0.5f, 0.5f), D3DXCOLOR(0.5f, 1.0f, 0.0f, 1.0f) },
@@ -371,7 +377,7 @@ bool CGameApplication::initGame(){
 	//10th Parameter(ID3D10Effect**) - A pointer to a memory address of  an effect object.
 
 	//At this function has completed we should have a valid pointer to an effect object, if it fails then we will display a message box nd return false.
-	if(FAILED(D3DX10CreateEffectFromFile(TEXT("Transform.fx"),
+	if(FAILED(D3DX10CreateEffectFromFile(TEXT("Texture.fx"),
 		NULL, NULL, "fx_4_0", dwShaderFlags, 0,
 		m_pD3D10Device, NULL, NULL, &m_pEffect,
 		NULL, NULL)))
@@ -428,7 +434,7 @@ bool CGameApplication::initGame(){
 		//Front
 		0, 1, 2, /*----*/ 0, 3, 1,
 		//Back
-		4, 5, 6, /*----*/ 4, 7, 5,
+		4, 5, 6 , /*----*/ 4, 7, 5,
 		//Left
 		0, 6, 4,  /*----*/ 4, 7, 5,
 		//Right
@@ -465,6 +471,9 @@ bool CGameApplication::initGame(){
 
 		{"COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12,
 		D3D10_INPUT_PER_VERTEX_DATA, 0 },
+
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 28, 
+		D3D10_INPUT_PER_VERTEX_DATA, 0}
 	};
 	//--------------------
 
@@ -526,7 +535,14 @@ bool CGameApplication::initGame(){
 	m_pWorldMatrixVariable = m_pEffect->GetVariableByName("matWorld")->AsMatrix();
 	//------------------
 
+	if(FAILED(D3DX10CreateShaderResourceViewFromFile(m_pD3D10Device,
+		TEXT("rockwall.jpg"), NULL, NULL, &m_pDiffuseTexture, NULL)))
+	{
+			MessageBox(NULL, TEXT("Can't load Texture"), TEXT("ERROR!"), MB_OK);
+				return false;
+	}
 
+	m_pDiffuseTextureVariable = m_pEffect->GetVariableByName("diffuseTexture")->AsShaderResource();
 
 	return true;
 }
